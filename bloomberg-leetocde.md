@@ -1,3 +1,79 @@
+## 62 Unique Paths
+A robot is located at the top-left corner of a m x n grid (marked 'Start' in the diagram below).
+
+The robot can only move either down or right at any point in time. The robot is trying to reach the bottom-right corner of the grid (marked 'Finish' in the diagram below).
+
+How many possible unique paths are there?
+![enter image description here](https://leetcode.com/static/images/problemset/robot_maze.png)
+Above is a 3 x 7 grid. How many possible unique paths are there?
+
+Note: m and n will be at most 100.
+
+```javascript
+/**
+ * @param {number} m
+ * @param {number} n
+ * @return {number}
+ */
+var uniquePaths = function(m, n) {
+    let currentRow = new Array(n);
+    // Assigning a 1 to matrix[0][0] is simply a shortcut that skips some later computation
+    // as matrix[i][0] will never change in this iterative process
+    for (let i = 0; i < n; i++) {
+        currentRow[i] = 1;
+    }
+    for (let row = 1; row < m; row++) {
+        for (let i = 1; i < n; i++) {
+            currentRow[i] += currentRow[i - 1];
+        }
+    }
+    return currentRow[n - 1];
+};
+```
+## 63. Unique Paths II
+Follow up for "Unique Paths" (62):
+
+Now consider if some obstacles are added to the grids. How many unique paths would there be?
+
+An obstacle and empty space is marked as `1` and `0` respectively in the grid.
+
+For example,
+There is one obstacle in the middle of a 3x3 grid as illustrated below.
+```
+[
+  [0,0,0],
+  [0,1,0],
+  [0,0,0]
+]
+```
+The total number of unique paths is `2`.
+
+**Note**: m and n will be at most `100`.
+```javascript
+/**
+ * @param {number[][]} obstacleGrid
+ * @return {number}
+ */
+var uniquePathsWithObstacles = function(obstacleGrid) {
+    const cols = obstacleGrid[0].length;
+
+    const paths = Array.apply(null, Array(cols)).map(() => 0);
+    paths[0] = 1;
+
+    obstacleGrid.forEach((currentRow) => {
+        currentRow.forEach((element, colIndex) => {
+            if (element == 1) {
+                paths[colIndex] = 0;
+            } else if (colIndex > 0) {
+                paths[colIndex] = paths[colIndex] + paths[colIndex - 1];
+            }
+        });
+    });
+
+    return paths[cols - 1];
+};
+```
+
 ## 117 Populating Next Right Pointers in Each Node II
 
 Follow up for problem "Populating Next Right Pointers in Each Node".
@@ -912,5 +988,939 @@ var zigzagLevelOrder = function(root) {
 };
 ```
 
-Implement a level order traversal. Based on the level we either push or shift onto the level array. 
+Implement a level order traversal. Based on the level we either push or shift onto the level array.
 
+## 26. Remove Duplicates from Sorted Array
+
+Given a sorted array, remove the duplicates in place such that each element appear only once and return the new length.
+
+Do not allocate extra space for another array, you must do this in place with constant memory.
+
+For example,
+Given input array nums = `[1,1,2]`,
+
+Your function should return length = 2, with the first two elements of nums being 1 and 2 respectively. It doesn't matter what you leave beyond the new length.
+
+```javascript
+/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var removeDuplicates = function(nums) {
+
+    //first elem will always be unique
+    let trueIndex = 1;
+
+    for (let i = 1; i < nums.length; i++) {
+        if (nums[i] !== nums[i - 1]) {
+            nums[trueIndex] = nums[i];
+            trueIndex++;
+        }
+    }
+
+    //length
+    return trueIndex;
+};
+```
+
+A number is unique if the element adjacent to it is different. Iterate through the array checking for numbers that are unique then add the unique numbers at the trueIndex. The trueIndex will overwite values that are duplicates.
+
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {number[]} preorder
+ * @param {number[]} inorder
+ * @return {TreeNode}
+ */
+var buildTree = function(preorder, inorder) {
+    if (preorder.length == 0) return null;
+
+    var root = new TreeNode(preorder[0]);
+    var i = 0;
+    while (i < inorder.length && inorder[i] != preorder[0]) i++;
+
+    // divide inorder list into left and right;
+    root.left = buildTree(preorder.slice(1, i+1), inorder.slice(0, i));
+    root.right = buildTree(preorder.slice(i+1, preorder.length), inorder.slice(i+1, inorder.length));
+
+    return root;
+
+};
+
+```
+
+            1
+           / \
+          2   3
+         / \   \
+        4   5   6
+the preorder and inorder arrays are:
+
+preorder: 1 2 4 5 3 6
+inorder: 4 2 5 1 3 6
+
+let's group the left nodes with ( ) and right nodes with [ ]:
+
+preorder: 1 (2 4 5) [3 6]  //left sub tree goes from index 1 to i + 1 - right is i + 1 to end
+inorder: (4 2 5) 1 [3 6]
+
+we can then build the left subtree using the following preorder and inorder arrays:
+
+preorder: 2 4 5
+inorder: 4 2 5
+
+and for the right subtree:
+
+preorder: 3 6
+inorder: 3 6
+
+
+```javascript
+/**
+ * @param {character[][]} board
+ * @param {string} word
+ * @return {boolean}
+ */
+function exist(board, word) {
+
+  function find(i, j, k) { //k is the index which keeps track of where we are with the word
+    //if i or j are not within the bounds of the board
+    if (i < 0 || j < 0 || i > board.length - 1 || j > board[0].length - 1) return false;
+
+    //if the current letter is not equal to k
+    if (board[i][j] !== word[k]) return false;
+
+    //if we have returned true for all previous letters and are now at the end of the word
+    if (k === word.length - 1) return true;
+
+    board[i][j] = '*';      // mark as visited
+
+    if (find(i - 1, j, k + 1)) return true;  // up
+    if (find(i + 1, j, k + 1)) return true;  // down
+    if (find(i, j - 1, k + 1)) return true;  // left
+    if (find(i, j + 1, k + 1)) return true;  // right
+
+    board[i][j] = word[k];  // reset
+    return false;
+  }
+
+  for (let i = 0; i < board.length; i++) {
+    for (let j = 0; j < board[i].length; j++) {
+      if (find(i, j, 0)) return true;
+    }
+  }
+
+  return false;
+}
+```
+
+## 79. Word Search
+
+Given a 2D board and a word, find if the word exists in the grid.
+
+The word can be constructed from letters of sequentially adjacent cell, where "adjacent" cells are those horizontally or vertically neighboring. The same letter cell may not be used more than once.
+
+For example,
+Given board =
+```
+[
+  ['A','B','C','E'],
+  ['S','F','C','S'],
+  ['A','D','E','E']
+]
+```
+
+word = `"ABCCED"`, -> returns `true`,
+word = `"SEE"`, -> returns `true`,
+word = `"ABCB"`, -> returns `false`.
+
+## 141. Linked List Cycle
+
+Given a linked list, determine if it has a cycle in it.
+
+Follow up:
+Can you solve it without using extra space?
+
+```javascript
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val) {
+ *     this.val = val;
+ *     this.next = null;
+ * }
+ */
+
+/**
+ * @param {ListNode} head
+ * @return {boolean}
+ */
+var hasCycle = function(head) {
+       // start both runners at the beginning
+    var slowRunner = head;
+    var fastRunner = head;
+
+    // until we hit the end of the list
+    while (fastRunner && fastRunner.next) {
+        slowRunner = slowRunner.next;
+        fastRunner = fastRunner.next.next;
+
+        // case: fastRunner is about to "lap" slowRunner
+        if (fastRunner === slowRunner) {
+            return true;
+        }
+    }
+
+    // case: fastRunner hit the end of the list
+    return false;
+};
+```
+
+## 5. Longest Palindromic Substring
+
+Given a string s, find the longest palindromic substring in s. You may assume that the maximum length of s is 1000.
+
+**Example:**
+```
+Input: "babad"
+Output: "bab"
+Note: "aba" is also a valid answer
+```
+**Example:**
+
+```
+Input: "cbbd"
+
+Output: "bb"
+```
+
+
+```javascript
+/**
+ * @param {string} s
+ * @return {string}
+ */
+var longestPalindrome = function(s) {
+
+    let longest = "";
+
+    for (let i = 0; i < s.length; i++) {
+        let odd = expand(s, i, i);
+        let even = expand(s, i, i + 1);
+
+        if (odd.length > longest.length) longest = odd;
+        if (even.length > longest.length) longest = even;
+
+
+    }
+
+    return longest;
+}
+
+function expand(s, j, k) {
+
+   while (j >= 0 && k < s.length && s[j] == s[k]) {
+		j--;
+		k++;
+	}
+
+    return s.slice(j + 1, k);
+}
+
+```
+## 13. Roman to Integer
+
+Given a roman numeral, convert it to an integer.
+
+Input is guaranteed to be within the range from 1 to 3999.
+
+**Notes:**
+canonical numbers (numbers described by a single letter):
+I = 1
+V = 5
+X = 10
+L = 50
+C = 100
+D = 500
+M = 1000
+
+Additive rule: Use left to right descending value canonical numbers to represent number
+e.g. XVII = 17
+
+Subtractive rule: In case additive rule returns more than 4 same characters in a row, write next larger canonical numeral and prefix numeral sequence to subtract.
+e.g. IIII = 4 is written as IV (5-1)
+
+```javascript
+/**
+ * @param {string} s
+ * @return {number}
+ */
+var romanToInt = function(s) {
+    let integer = 0;
+    let hash = {
+        I:1,
+        V:5,
+        X:10,
+        L:50,
+        C:100,
+        D:500,
+        M:1000
+    }
+
+    for (let i = 0; i < s.length; i++){
+
+        let current = hash[s[i]];
+        let next = s[i + 1] ? hash[s[i + 1]] : s[i];
+
+        if (current < next) {
+            integer += next - current;
+            i++;
+        } else {
+            integer += current;
+        }
+    }
+
+    return integer;
+};
+```
+
+The only case when you subtract is when the next numeral is larger than the previous.
+
+## 100. Same Tree
+Given two binary trees, write a function to check if they are equal or not.
+
+Two binary trees are considered equal if they are structurally identical and the nodes have the same value.
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {TreeNode} p
+ * @param {TreeNode} q
+ * @return {boolean}
+ */
+var isSameTree = function(p, q) {
+
+	if(p===null && q==null) return true;
+	if(p===null || q===null) return false;
+	return p.val===q.val && isSameTree(p.left, q.left) && isSameTree(p.right, q.right);
+};
+```
+## 139. Word Break
+
+Given a **non-empty** string s and a dictionary wordDict containing a list of **non-empty** words, determine if s can be segmented into a space-separated sequence of one or more dictionary words. You may assume the dictionary does not contain duplicate words.
+
+For example, given
+s = `"leetcode"`,
+dict = `["leet", "code"]`.
+
+Return true because `"leetcode"` can be segmented as `"leet code"`.
+
+**come back to
+
+## 15. 3Sum
+
+Given an array S of n integers, are there elements a, b, c in S such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.
+
+Note: The solution set must not contain duplicate triplets.
+```js
+For example, given array S = [-1, 0, 1, 2, -1, -4],
+
+A solution set is:
+[
+  [-1, 0, 1],
+  [-1, -1, 2]
+]
+```
+
+```javascript
+/**
+ * @param {number[]} nums
+ * @return {number[][]}
+ */
+var threeSum = function(nums) {
+
+  let triplets = [];
+  nums = nums.sort((a, b) => a - b);
+
+  for(let i = 0; i < nums.length-2; i++) {
+    if(i == 0 || nums[i] > nums[i - 1]) {
+      let lo = i + 1;
+      let high = nums.length - 1;
+
+      while(lo < high) {
+        let sum = nums[i] + nums[lo] + nums[high];
+        if(sum == 0) {
+          triplets.push([nums[i], nums[lo], nums[high]]);
+          lo++;
+          high--;
+          //skip duplicates from lo
+          while(lo<high && nums[lo]==nums[lo-1])
+            lo++;
+
+          //skip duplicates from high
+          while(lo<high && nums[high]==nums[high+1])
+            high--;
+        } else if(sum < 0) {
+          lo++;
+        } else {
+          high--;
+        }
+      }
+    }
+  }
+
+  return triplets;
+};
+
+```
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {TreeNode} root
+ * @return {boolean}
+ */
+var isSymmetric = function(root) {
+   return root==null || isSymmetricHelp(root.left, root.right);
+};
+
+function isSymmetricHelp(left, right){
+
+    if(left==null || right==null) return left === right;
+
+    if(left.val !== right.val) return false;
+
+    return isSymmetricHelp(left.left, right.right) && isSymmetricHelp(left.right, right.left);
+}
+```
+
+Alternatively, you can perform a level-order traversal and check to see if each level is symmetrical.
+
+# 172. Factorial Trailing Zeroes
+Given an integer n, return the number of trailing zeroes in n!.
+
+**Note:** Your solution should be in logarithmic time complexity.
+
+
+```javascript
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var trailingZeroes = function(n) {
+    return n == 0 ? 0 : Math.floor(n / 5) + trailingZeroes(Math.floor(n / 5));
+};
+```
+
+alternate solution:
+
+```javascript
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var trailingZeroes = function(n) {
+    let result = 0;
+    for (let i=5; Math.floor(n/i) > 0; i*=5){
+        result += Math.floor(n/i);
+    }
+    return result;
+};
+```
+A traling zero occurs when 10 occurs in the n! sequence. 10 comes from 5 and 2 in n! If we match all of the 5s with all of the 2s then we can count the matches to get the trailing 0 count. Additionally, since even numbers are abundant in n! we just need to count the 5s and we can assume that we will always have a matching 2 from one even number.
+
+Example One
+
+How many multiples of 5 are between 1 and 23? There is 5, 10, 15, and 20, for four multiples of 5. Paired with 2's from the even factors, this makes for four factors of 10, so: 23! has 4 zeros.
+
+Example Two
+
+How many multiples of 5 are there in the numbers from 1 to 100?
+
+because 100 ÷ 5 = 20, so, there are twenty multiples of 5 between 1 and 100.
+
+but wait, actually 25 is 5×5, so each multiple of 25 has an extra factor of 5, e.g. 25 × 4 = 100，which introduces extra of zero.
+
+So, we need know how many multiples of 25 are between 1 and 100? Since 100 ÷ 25 = 4, there are four multiples of 25 between 1 and 100.
+
+Finally, we get 20 + 4 = 24 trailing zeroes in 100!
+
+The above example tell us, we need care about 5, 5×5, 5×5×5, 5×5×5×5 ....
+
+Example Three
+
+By given number 4617.
+
+5^1 : 4617 ÷ 5 = 923.4, so we get 923 factors of 5
+
+5^2 : 4617 ÷ 25 = 184.68, so we get 184 additional factors of 5
+
+5^3 : 4617 ÷ 125 = 36.936, so we get 36 additional factors of 5
+
+5^4 : 4617 ÷ 625 = 7.3872, so we get 7 additional factors of 5
+
+5^5 : 4617 ÷ 3125 = 1.47744, so we get 1 more factor of 5
+
+5^6 : 4617 ÷ 15625 = 0.295488, which is less than 1, so stop here.
+
+Then 4617! has 923 + 184 + 36 + 7 + 1 = 1151 trailing zeroes.
+
+
+## 24. Swap Nodes in Pairs
+
+Given a linked list, swap every two adjacent nodes and return its head.
+
+For example,
+Given `1->2->3->4`, you should return the list as `2->1->4->3`.
+
+Your algorithm should use only constant space. You may not modify the values in the list, only nodes itself can be changed.
+
+```javascript
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val) {
+ *     this.val = val;
+ *     this.next = null;
+ * }
+ */
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var swapPairs = function(head) {
+
+        if (head == null || head.next == null) {
+            return head;
+        }
+
+        let first = head,
+            last = head.next;
+
+        first.next = swapPairs(last.next);
+        last.next = first;
+        return last;
+};
+```
+swapPairs is called with the 'first' node and returns the 'last' node. If there is no 'last' node, then it will return the first.
+
+## 230. Kth Smallest Element in a BST
+
+Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
+
+Note:
+You may assume k is always valid, 1 ? k ? BST's total elements.
+
+Follow up:
+What if the BST is modified (insert/delete operations) often and you need to find the kth smallest frequently? How would you optimize the kthSmallest routine?
+
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {TreeNode} root
+ * @param {number} k
+ * @return {number}
+ */
+var kthSmallest = function(root, k) {
+    let traversal = [];
+    return traversal[k - 1];
+};
+
+function inorder(root, traversal) {
+    if (root.left) inorder(root.left, traversal);
+    traversal.push(root.val);
+    if (root.right) inorder(root.right, traversal);
+}
+```
+
+iterative solution:
+
+```javascript
+var kthSmallest = function(root, k) {
+    let stack = [];
+    let count = 0;
+    let node = root;
+
+    while (true){
+        if (node){
+            stack.push(node);
+            node = node.left;
+        } else {
+            if (stack.length == 0) break;
+            node = stack.pop();
+            count += 1;
+            if (count == k) return node.val;
+            node = node.right;
+        }
+    }
+};
+```
+
+## 274. H-Index
+
+Given an array of citations (each citation is a non-negative integer) of a researcher, write a function to compute the researcher's h-index.
+
+According to the definition of h-index on Wikipedia: "A scientist has index h if h of his/her N papers have at least h citations each, and the other N − h papers have no more than h citations each."
+
+For example, given `citations = [3, 0, 6, 1, 5]`, which means the researcher has `5` papers in total and each of them had received `3, 0, 6, 1, 5` citations respectively. Since the researcher has `3` papers with at least `3` citations each and the remaining two with no more than `3` citations each, his h-index is `3`.
+
+Note: If there are several possible values for `h`, the maximum one is taken as the `h`-index.
+
+```javascript
+
+/**
+ * @param {number[]} citations
+ * @return {number}
+ */
+var hIndex = function(citations) {
+
+    let n = citations.length;
+    let buckets = Array.apply(null, Array(n+1)).map(() => 0);
+
+    for (let i = 0; i < n; i++){
+        if (citations[i] > n) {
+            buckets[n]++;
+        } else {
+            buckets[citations[i]]++;
+        }
+    }
+
+    let count = 0;
+    for(let i = n; i >= 0; i--) {
+        count += buckets[i];
+        if(count >= i) {
+            return i;
+        }
+    }
+    return 0;
+
+};
+```
+
+
+So assume n is the total number of papers, if we have n+1 buckets, number from 0 to n, then for any paper with reference corresponding to the index of the bucket, we increment the count for that bucket. The only exception is that for any paper with larger number of reference than n, we put in the n-th bucket.
+
+Then we iterate from the back to the front of the buckets, whenever the total count exceeds the index of the bucket, meaning that we have the index number of papers that have reference greater than or equal to the index. Which will be our h-index result. The reason to scan from the end of the array is that we are looking for the greatest h-index.
+
+## 11. Container With Most Water
+
+Given n non-negative integers $a_1, a_2,..., a_n$, where each represents a point at coordinate $(i, a_i)$. n vertical lines are drawn such that the two endpoints of line $i$ is at $(i, a_i)$ and $(i, 0)$. Find two lines, which together with x-axis forms a container, such that the container contains the most water.
+
+Note: You may not slant the container and n is at least 2.
+
+
+```javascript
+
+/**
+ * @param {number[]} height
+ * @return {number}
+ */
+var maxArea = function(height) {
+    let water = 0;
+	let i=0,
+        j = height.length - 1;
+
+	while(i < j){
+		let h = Math.min(height[i],height[j]);
+		water = Math.max(water,(j-i)*h);
+
+		 if (height[i] < height[j])
+                i++;
+            else
+                j--;
+	}
+
+	return water;
+};
+```
+
+The intuition behind this approach is that the area formed between the lines will always be limited by the height of the shorter line. Further, the farther the lines, the more will be the area obtained.
+
+We take two pointers, one at the beginning and one at the end of the array constituting the length of the lines. Futher, we maintain a variable maxareamaxarea to store the maximum area obtained till now. At every step, we find out the area formed between them, update maxareamaxarea and move the pointer pointing to the shorter line towards the other end by one step.
+
+Initially we consider the area constituting the exterior most lines. Now, to maximize the area, we need to consider the area between the lines of larger lengths. If we try to move the pointer at the longer line inwards, we won't gain any increase in area, since it is limited by the shorter line. But moving the shorter line's pointer could turn out to be beneficial, as per the same argument, despite the reduction in the width. This is done since a relatively longer line obtained by moving the shorter line's pointer might overcome the reduction in area caused by the width reduction.
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {TreeNode} root
+ * @param {number} sum
+ * @return {number[][]}
+ */
+var pathSum = function(root, sum) {
+    let paths = getAllPaths(root);
+
+    paths = paths.filter((path) => {
+        return path.reduce((a, b) => a + b) === sum;
+    })
+
+    return paths;
+};
+
+function getAllPaths(root) {
+
+    if(!root) return [];
+    let result = [];
+
+    function path(root, arr = []){
+        if(!root.left && !root.right) result.push([...arr, root.val]);
+        if(root.left) path(root.left, [...arr, root.val]);
+        if(root.right) path(root.right, [...arr, root.val]);
+    }
+
+    path(root);
+
+    return result;
+
+}
+```
+We perform a depth first traversal and push in the path when we reach a leaf node / when the root's left and right are null.
+
+## 556. Next Greater Element III
+
+Given a positive 32-bit integer n, you need to find the smallest 32-bit integer which has exactly the same digits existing in the integer n and is greater in value than n. If no such positive 32-bit integer exists, you need to return -1.
+Example 1:
+
+Input: 12
+Output: 21
+
+Example 2:
+
+Input: 21
+Output: -1
+
+NEEDS WORK
+```javascript
+/**
+ * @param {number} n
+ * @return {number}
+ */
+var nextGreaterElement = function(n) {
+        number = n.toString().split('');
+
+        let i, j;
+        // I) Start from the right most digit and
+        // find the first digit that is
+        // smaller than the digit next to it.
+        for (i = number.length-1; i > 0; i--)
+            if (number[i-1] < number[i])
+               break;
+
+        // If no such digit is found, its the edge case 1.
+        if (i == 0)
+            return -1;
+
+         // II) Find the smallest digit on right side of (i-1)'th
+         // digit that is greater than number[i-1]
+        let x = number[i-1], smallest = i;
+        for (j = i+1; j < number.length; j++)
+            if (number[j] > x && number[j] <= number[smallest])
+                smallest = j;
+
+        // III) Swap the above found smallest digit with
+        // number[i-1]
+        let temp = number[i-1];
+        number[i-1] = number[smallest];
+        number[smallest] = temp;
+
+        // IV) Sort the digits after (i-1) in ascending order
+
+        let begin = number.slice(0, i-1)
+        let end = number.slice(i-1).sort((a, b) => b - a);
+
+        number = begin.concat(end);
+
+        number = parseInt(number.join(''), 10)
+
+        return number;
+
+};
+```
+
+## 266. Palindrome Permutation
+
+Given a string, determine if a permutation of the string could form a palindrome.
+
+For example,
+`"code"`-> False, `"aab"` -> True, `"carerac"` -> True.
+
+```javascript
+var canPermutePalindrom = function(s){
+  let frequency = {};
+
+  for (let i = 0; i < s.length; i++){
+    frequency[s[i]] ? frequency[s[i]]++ : frequency[s[i]] = 1;
+  }
+
+  return Object.values(frequency).filter((count) => count % 2 > 0).length > 1 ? false : true;
+}
+```
+
+## 110. Balanced Binary Tree
+
+Given a binary tree, determine if it is height-balanced.
+
+For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
+
+```javascript
+/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) {
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * }
+ */
+/**
+ * @param {TreeNode} root
+ * @return {boolean}
+ */
+var isBalanced = function(root) {
+
+    if (root === null)  return true;
+
+    if (Math.abs(getDepth(root.left) - getDepth(root.right)) > 1) return false;
+
+    return isBalanced(root.left) && isBalanced(root.right);
+};
+
+function getDepth(root){
+    return root === null ? 0 : 1 + Math.max(getDepth(root.left), getDepth(root.right));
+}
+```
+
+The getDepth function starts to bubble back up when a root is null and 0 is returned to its parent. It is helpful to think in the case of one node to understand the getDepth function. If a root with no children is passed in, then getDepth(root.left) -> getDepth(null) -> returns 0 and the same for the right. Then 0 is returned from both right and left subtrees and 1 is returned from the function because 1+0 = 1.
+
+isBalanced: A tree is balanced if the left and right sub trees are also balanced. We check the height of the left and right subtrees of each node. If the height of all of the subtrees do not differ by more than one than the tree is balanced.
+
+## 208. Implement Trie (Prefix Tree)
+
+
+Implement a trie with `insert`, `search`, and `startsWith` methods.
+
+Note:
+You may assume that all inputs are consist of lowercase letters a-z.
+
+```javascript
+function TrieNode() {
+    this.children = new Map();
+    this.end = false;
+}
+var Trie = function() {
+    this.root = new TrieNode();
+};
+
+/**
+ * Inserts a word into the trie.
+ * @param {string} word
+ * @return {void}
+ */
+Trie.prototype.insert = function(word, node = this.root) {
+
+    if (!word.length) {
+        node.end = true;
+        return;
+    } else if (!node.children.has(word[0])) {
+        node.children.set(word[0], new TrieNode())
+    }
+
+   return this.insert(word.substr(1), node.children.get(word[0]));
+
+};
+
+/**
+ * Returns if the word is in the trie.
+ * @param {string} word
+ * @return {boolean}
+ */
+Trie.prototype.search = function(word, node = this.root) {
+
+    if (node.children.has(word[0])) {
+
+        if (node.children.get(word[0]).end && word.length == 1) return true;
+
+        return this.search(word.substr(1), node.children.get(word[0]))
+    }
+
+    return false;
+};
+
+/**
+ * Returns if there is any word in the trie that starts with the given prefix.
+ * @param {string} prefix
+ * @return {boolean}
+ */
+Trie.prototype.startsWith = function(prefix, node = this.root) {
+
+    if (!prefix.length) return true;
+
+
+    if (node.children.has(prefix[0])) {
+
+
+        return this.startsWith(prefix.substr(1), node.children.get(prefix[0]))
+    }
+
+    return false;
+};
+```
+
+Insert: First we use the root node to insert the first letter of the word. If the root does not have the current letter than we set it as a property. We then recursively call insert on the next letter and pass in the node that we either just set or was already there. We repeat this process until the word length is 0 and then we mark the current node as the end.
+
+Search: We search for a word in a similar fashion. The condition for finding a word is if the current node is the end of the word and if the search term now has a length of 1 (meaning that we have reached the last letter).
+
+##206 Reverse Linked list
+do it iteratively and recursively
+
+```javascript
+/**
+ * Definition for singly-linked list.
+ * function ListNode(val) {
+ *     this.val = val;
+ *     this.next = null;
+ * }
+ */
+/**
+ * @param {ListNode} head
+ * @return {ListNode}
+ */
+var reverseList = function(head, prev = null) {
+
+    if (!head) return prev;
+
+    let next = head.next;
+    head.next = prev;
+
+    return reverseList(next, head)
+
+};
+```
