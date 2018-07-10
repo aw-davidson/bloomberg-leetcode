@@ -74,6 +74,52 @@ var uniquePathsWithObstacles = function(obstacleGrid) {
 };
 ```
 
+## 146 LRU Cache
+Design and implement a data structure for Least Recently Used (LRU) cache. It should support the following operations: get and put.
+
+```get(key)``` - Get the value (will always be positive) of the key if the key exists in the cache, otherwise return ```-1```.
+```put(key, value)``` - Set or insert the value if the key is not already present. When the cache reached its capacity, it should invalidate the least recently used item before inserting a new item.
+
+Follow up:
+Could you do both operations in ```O(1)``` time complexity?
+
+
+```javascript
+var LRUCache = function(capacity) {
+    this.capacity = capacity;
+    this.map = new Map();
+};
+
+/**
+ * @param {number} key
+ * @return {number}
+ */
+LRUCache.prototype.get = function(key) {
+  if (this.map.has(key)) {
+      let val = this.map.get(key);
+      this.map.delete(key);
+      this.map.set(key, val);
+      return this.map.get(key);
+  }
+
+  return -1;
+
+};
+
+/**
+ * @param {number} key
+ * @param {number} value
+ * @return {void}
+ */
+LRUCache.prototype.put = function(key, value) {
+    if (this.map.has(key)) this.map.delete(key);
+    this.map.set(key, value);
+    let keys = this.map.keys();
+    while (this.map.size > this.capacity) this.map.delete(keys.next().value)
+
+};
+```
+
 ## 117 Populating Next Right Pointers in Each Node II
 
 Follow up for problem "Populating Next Right Pointers in Each Node".
@@ -550,14 +596,150 @@ For example,
 Given `[1,3],[2,6],[8,10],[15,18]`,
 return `[1,6],[8,10],[15,18]`
 
+```javascript
+function merge(meetings) {
+
+  // Create a deep copy of the meetings array
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#Deep_Clone
+  const meetingsCopy = JSON.parse(JSON.stringify(meetings));
+
+
+  // Sort by start time
+  const sortedMeetings = meetings.sort((a, b) => {
+    return a.startTime - b.startTime;
+  });
+
+  // Initialize mergedMeetings with the earliest meeting
+  const mergedMeetings = [sortedMeetings[0]];
+
+  for (let i = 1; i < sortedMeetings.length; i++) {
+    const currentMeeting    = sortedMeetings[i];
+    const lastMergedMeeting = mergedMeetings[mergedMeetings.length - 1];
+
+    // If the current meeting overlaps with the last merged meeting, use the
+    // later end time of the two
+    if (currentMeeting.startTime <= lastMergedMeeting.endTime) {
+      lastMergedMeeting.endTime = Math.max(lastMergedMeeting.endTime, currentMeeting.endTime);
+    } else {
+
+      // Add the current meeting since it doesn't overlap
+      mergedMeetings.push(currentMeeting);
+    }
+  }
+
+  return mergedMeetings;
+}
+```
+
+## 16. 3Sum Closest
+
+Given an array S of n integers, find three integers in S such that the sum is closest to a given number, target. Return the sum of the three integers. You may assume that each input would have exactly one solution.
+
+    For example, given array S = {-1 2 1 -4}, and target = 1.
+
+    The sum that is closest to the target is 2. (-1 + 2 + 1 = 2).
+
+```javascript
+var threeSumClosest = function(nums, target) {
+
+    let closestSum = nums[0] + nums[1] + nums[2];
+    nums = nums.sort((a, b) => a - b)
+
+    for (let i = 0; i < nums.length - 2; i++) {
+        let lo = i + 1;
+        let hi = nums.length - 1;
+
+        while (lo < hi) {
+            let sum = nums[i] + nums[lo] + nums[hi];
+
+            if (Math.abs(closestSum - target) > Math.abs(sum - target)) {
+                closestSum = sum;
+            }
+
+            if (sum === target) return closestSum;
+            if (sum < target) lo++;
+            if (sum > target) hi--;
+
+        }
+
+    }
+
+    return closestSum;
+};
+```
+
 ## 287 Find the Duplicate Number
 
 Given an array nums containing `n + 1` integers where each integer is between `1` and `n` (inclusive), prove that at least one duplicate number must exist. Assume that there is only one duplicate number, find the duplicate one.
+
+```javascript
+var findDuplicate = function(nums) {
+    let slow = nums[0], fast = nums[nums[0]];
+
+    //here fast moves two steps at a time
+    while(slow!==fast){
+    	slow = nums[slow];
+    	fast = nums[nums[fast]];
+    }
+
+    fast=0;
+
+    //here fast move one step at a time
+    while(slow!==fast){
+    	slow = nums[slow];
+    	fast = nums[fast];
+    }
+    return slow;
+};
+```
+
+The array of values of n + 1 can be thought of as a linked list where the value at each index is a pointer to another index. This problem is the same as a linked list with a cycle.
 
 ## 2 Add Two Numbers
 You are given two non-empty linked lists representing two non-negative integers. The digits are stored in reverse order and each of their nodes contain a single digit. Add the two numbers and return it as a linked list.
 
 You may assume the two numbers do not contain any leading zero, except the number 0 itself.
+
+```javascript
+var addTwoNumbers = function(l1, l2) {
+        let s1 = [];
+        let s2 = [];
+
+        while(l1 != null) {
+            s1.push(l1.val);
+            l1 = l1.next;
+        };
+        while(l2 != null) {
+            s2.push(l2.val);
+            l2 = l2.next;
+        }
+
+        let sum = 0;
+        let currentNode = new ListNode(0);
+
+        while (s1.length || s2.length) {
+            if (s1.length) sum += s1.pop();
+            if (s2.length) sum += s2.pop();
+
+
+            //if sum is 15 then val is 5
+            currentNode.val = sum % 10;
+
+
+            let nextNode = new ListNode(Math.floor(sum / 10));
+            nextNode.next = currentNode;
+
+            currentNode = nextNode;
+            sum = Math.floor(sum / 10);
+
+        }
+
+        //if the first significant digits sum to larger than 9 and need a carry
+        return currentNode.val ? currentNode : currentNode.next ;
+};
+```
+
+Iterate through both linked lists to create a stack for each. Pop off of the stack and add the two numbers to the sum. Create new nodes with the first significant digit of the sum by dividing by 10 - this insures that the first digit of the sum is correct. shift the sum right by dividing by 10.
 
 ## 268 Missing Number
 Given an array containing `n` distinct numbers taken from `0, 1, 2, ..., n`, find the one that is missing from the array.
@@ -567,6 +749,18 @@ Given nums = `[0, 1, 3]` return 2.
 
 Note:
 Your algorithm should run in linear runtime complexity. Could you implement it using only constant extra space complexity?
+
+```javascript
+var missingNumber = function(nums) {
+    let n = nums.length;
+    let sumWithMissing = ((n * n) + n)/2;
+    let actualSum = nums.reduce((acc, curr) => acc + curr, 0);
+
+    return sumWithMissing - actualSum;
+};
+```
+
+use a triangular series.
 
 ## 98 Validate Binary Search Tree
 
@@ -673,14 +867,38 @@ Given `[3,2,1,5,6,4]` and `k = 2`, return `5`.
 Note:
 You may assume k is always valid, 1 ≤ k ≤ array's length.
 
-## 215 Kth Largest Element in an Array
-Find the kth largest element in an unsorted array. Note that it is the kth largest element in the sorted order, not the kth distinct element.
+```javascript
+const findKthLargest = (nums, k) => {
+    return quickSelect(nums, 0, nums.length - 1, k);
+};
 
-For example,
-Given `[3,2,1,5,6,4]` and `k = 2`, return `5`.
+const quickSelect = (nums, lo, hi, k) => {
+    // use quick sort's idea
+    // put nums that are <= pivot to the left
+    // put nums that are  > pivot to the right
+    for (var i = lo, j = lo; j < hi; j++) {
+        if (nums[j] <= nums[hi]) {
+            swap(nums, i++, j);
+        }
+    }
+    swap(nums, i, j);
 
-Note:
-You may assume k is always valid, 1 ≤ k ≤ array's length.
+    // count the nums that are >= pivot
+    const m = hi - i + 1;
+    // pivot is the one!
+    if (m === k) return nums[i];
+    // pivot is too small, so it must be on the right
+    if (m > k) return quickSelect(nums, i + 1, hi, k);
+    // pivot is too big, so it must be on the left
+    return quickSelect(nums, lo, i - 1, k - m);
+};
+
+function swap(nums, i, j) {
+    [nums[i], nums[j]] = [nums[j], nums[i]]
+}
+```
+
+
 
 ```javascript
 /**
@@ -1025,6 +1243,11 @@ var removeDuplicates = function(nums) {
 
 A number is unique if the element adjacent to it is different. Iterate through the array checking for numbers that are unique then add the unique numbers at the trueIndex. The trueIndex will overwite values that are duplicates.
 
+## 105. Construct Binary Tree from Preorder and Inorder Traversal
+
+Given preorder and inorder traversal of a tree, construct the binary tree.
+**Note:**
+You may assume that duplicates do not exist in the tree.
 
 ```javascript
 /**
@@ -1081,6 +1304,26 @@ and for the right subtree:
 preorder: 3 6
 inorder: 3 6
 
+## 79. Word Search
+
+Given a 2D board and a word, find if the word exists in the grid.
+
+The word can be constructed from letters of sequentially adjacent cell, where "adjacent" cells are those horizontally or vertically neighboring. The same letter cell may not be used more than once.
+
+For example,
+Given board =
+```
+[
+  ['A','B','C','E'],
+  ['S','F','C','S'],
+  ['A','D','E','E']
+]
+```
+
+word = `"ABCCED"`, -> returns `true`,
+word = `"SEE"`, -> returns `true`,
+word = `"ABCB"`, -> returns `false`.
+
 
 ```javascript
 /**
@@ -1121,25 +1364,7 @@ function exist(board, word) {
 }
 ```
 
-## 79. Word Search
 
-Given a 2D board and a word, find if the word exists in the grid.
-
-The word can be constructed from letters of sequentially adjacent cell, where "adjacent" cells are those horizontally or vertically neighboring. The same letter cell may not be used more than once.
-
-For example,
-Given board =
-```
-[
-  ['A','B','C','E'],
-  ['S','F','C','S'],
-  ['A','D','E','E']
-]
-```
-
-word = `"ABCCED"`, -> returns `true`,
-word = `"SEE"`, -> returns `true`,
-word = `"ABCB"`, -> returns `false`.
 
 ## 141. Linked List Cycle
 
@@ -1327,7 +1552,36 @@ dict = `["leet", "code"]`.
 
 Return true because `"leetcode"` can be segmented as `"leet code"`.
 
-**come back to
+```javascript
+var wordBreak = function(s, wordDict) {
+    if (wordDict.length === 0) return false;
+    if (wordDict.length === 1) return s === wordDict[0];
+
+    let queue = [''];
+    let memo = new Map();
+
+    while (queue.length > 0) {
+        const val = queue.shift();
+
+        for (let word of wordDict) {
+            const searchWord = `${val}${word}`;
+            const startsWith = s.indexOf(searchWord) === 0;
+
+
+            if (searchWord === s) return true;
+
+            else if (!memo.has(searchWord) && startsWith) {
+                memo.set(searchWord, true);
+                queue.push(searchWord);
+            }
+        }
+    }
+
+    return false;
+};
+```
+
+We do a breadfirst search with memoization. Nodes represent a substring of s that can be made up of words from the wordDict. A path from the root to a leaf node that is s represents a way to compose that word with words from the wordDict.
 
 ## 15. 3Sum
 
@@ -1719,7 +1973,6 @@ Example 2:
 Input: 21
 Output: -1
 
-NEEDS WORK
 ```javascript
 /**
  * @param {number} n
@@ -1755,14 +2008,14 @@ var nextGreaterElement = function(n) {
 
         // IV) Sort the digits after (i-1) in ascending order
 
-        let begin = number.slice(0, i-1)
-        let end = number.slice(i-1).sort((a, b) => b - a);
-
+        let begin = number.slice(0, i)
+        let end = number.slice(i).sort((a, b) => a - b);
         number = begin.concat(end);
-
         number = parseInt(number.join(''), 10)
 
-        return number;
+        if (number > 2147483647) return -1;
+
+        return number > n ? number : -1;
 
 };
 ```
@@ -1921,6 +2174,272 @@ var reverseList = function(head, prev = null) {
     head.next = prev;
 
     return reverseList(next, head)
+
+};
+```
+
+##discuss the differences between python,java and javascript
+
+##1) Given a sorted array of positive and negative integer elements, return an array containing the elements from before but squared and sorted in O(n) time.
+
+[-3, -2, -1, 0, 1, 3, 5] ---> [0, 1, 1, 4, 9, 9, 25]
+[-3, -2, 3, 4] ---> [4, 9, 9, 16]
+
+use two pointers. One starts from the end of the negatives and one starts from the start of the positives. insert numbers with absolute value less than the other at the pointer.
+
+```javascript
+function squareSorted(arr) {
+  let i = 0; //negative pointer
+  let j = 0;  //positive pointer
+
+  while(arr[j] < 0) {
+    j++;
+  }
+  i = j - 1;
+
+  let sortedSquare = [];
+
+  while (i >= 0 && j < arr.length) {
+    if (Math.abs(arr[i]) < arr[j]) {
+      sortedSquare.push(Math.pow(arr[i], 2))
+      i--;
+    } else {
+      sortedSquare.push(Math.pow(arr[j], 2));
+      j++
+    }
+  }
+
+  while (i >= 0) {
+    sortedSquare.push(Math.pow(arr[i], 2));
+    i--;
+  }
+
+  while (j < arr.length) {
+    sortedSquare.push(Math.pow(arr[j], 2));
+    j++;
+  }
+
+  return sortedSquare;
+}
+```
+
+##lots of people in a running competition and there are lots of check points, build and maintain a real time top ten list.
+
+##Write a function which returns true if is called more than 3 times in 3 seconds.
+
+```javascript
+function threeInThree() {
+  let counter = 0;
+
+  function called(){
+    if (counter > 3) return true;
+    counter++;
+  }();
+}
+```
+
+##String Compression
+
+```javascript
+var compress = function(chars) {
+
+   let indexAns = 0,
+       index = 0;
+
+        while(index < chars.length){
+            let currentChar = chars[index];
+            let count = 0;
+            while(index < chars.length && chars[index] == currentChar){
+                index++;
+                count++;
+            }
+            chars[indexAns++] = currentChar;
+            if(count != 1)
+                for(let c of count.toString().split(''))
+                    chars[indexAns++] = c;
+        }
+
+        return indexAns;
+
+};
+```
+
+##Code to verify if given format is in XML or not
+XML documents must have a root element
+XML elements must have a closing tag
+XML tags are case sensitive
+XML elements must be properly nested
+XML attribute values must be quoted
+
+##How would you design a music app like Spotify? (Classes and connections between them)
+
+##The difference of thread and process.
+
+A process is a currently running program. A single process or multiple prcesses make up an application. Threads are subsets of processes and A thread is the basic unit for which the computer allocates processing time. A thread can execute any part of the process code, including parts currently being executed by another thread.
+
+For example, a newspaper is like a program. It doesnt have life on its own but it is given life when I read it / when it is executed. When I start to read the arts section that can be a considered a thread of control. When my friend reads the sports section that can also be considered a thread of control. If we both want to then read the business section that is a conflict because there is only one business section and in a computer the operating system needs to solve this conflict. A process is a program plus the state of all threads executing in a program.
+
+##The second question was graphs. Given an undirected graph, find all paths from a target node to source node.
+The idea is to do Depth First Traversal of given directed graph. Start the traversal from source. Keep storing the visited vertices in an array say ‘path[]’. If we reach the destination vertex, print contents of path[]. The important thing is to mark current vertices in path[] as visited also, so that the traversal doesn’t go in a cycle.
+
+##Give you an array with increasing order and decreasing order [1,2,3,4,2,1], find a target number.
+you can find the maximum (and its position) in O(logn). Then you can just do a binary search in each part which is also O(logn).
+
+```javascript
+var search = function(nums, target) {
+    let lo = 0, hi = nums.length;
+
+    while (lo < hi) {
+        let mid = Math.floor((lo + hi) / 2);
+
+        let num = (nums[mid] < nums[0]) == (target < nums[0]) //are they on the same side
+                   ? nums[mid]
+                   : target < nums[0] ? -Infinity : Infinity;
+
+        if (num < target)
+            lo = mid + 1;
+        else if (num > target)
+            hi = mid;
+        else
+            return mid;
+    }
+
+    return -1;
+};
+```
+
+##invert tree
+```javascript
+var invertTree = function(root) {
+     if (root == null) {
+            return null;
+        }
+
+        let left = root.left,
+                right = root.right;
+
+        root.left = invertTree(right);
+        root.right = invertTree(left);
+
+        return root;
+}
+```
+
+
+##Write a function that finds and returns the node with the second highest value in a Binary Search Tree. Assume the BST is valid, but not necessarily complete or balanced.
+inorder traversal
+
+##3 Sum
+
+##Anagrams
+
+##Maximum length of a substring
+
+##If you had n racers and m checkpoints, how would you list out the racers in the order in which they are in the race given that each checkpoint gets a notification when a specific racer crosses it?
+
+##leetcode word break
+```javascript
+var wordBreak = function(s, wordDict) {
+
+    let queue = [''];
+    let memo = new Set();
+
+    while (queue.length){
+        let val = queue.shift();
+
+
+        for (let word of wordDict) {
+             let searchWord = `${val}${word}`
+             let startsWith = s.indexOf(searchWord) === 0;
+
+            if (s === searchWord) return true;
+
+            if (startsWith && !memo.has(searchWord)) {
+                memo.add(searchWord);
+                queue.push(searchWord);
+            }
+
+        }
+
+    }
+
+    return false;
+
+};
+```
+
+##Asked about how to make a binary tree into an array and then how to sort the array with binary search.
+
+##Candy Crush string problem
+
+##sort an array with two stacks.
+
+```javascript
+function sort(stack1, stack2) {
+  while (stack1.length) {
+    let temp = stack1.pop();
+
+    while (stack2.length && temp < stack2[stack2.length - 1]){
+      stack1.push(stack2.pop())
+    }
+
+    stack2.push(temp)
+  }
+
+  return stack2;
+}
+```
+
+##Implement a schedule that takes as input some number of appointments within a 24 hour period and outputs all the free blocks of time.
+
+##Remove duplicates in a linked list
+add seen to a set. If its in seen remove it.
+
+##Find the n-th level of a binary tree,
+
+##Given a string which contains only lowercase letters , remove 3 or more alike letters in sequence so that even after removing there are no 3 or more repeating letters in sequence. Repeat this process as many times as possible.
+
+```javascript
+
+var removeDuplicateLetters = function(s) {
+
+   //creating count array
+   const count = new Array(26);
+   const a = 'a'.charCodeAt(0);
+   for (let i = 0; i < s.length; i++) {
+      const k = s.charCodeAt(i) - a;
+      count[k] = count[k] ? count[k]+1 : 1;
+   }
+
+
+
+   const uniqueSubString = [];
+   const visited = new Array(26);
+
+  for (let i = 0; i < s.length; i++) {
+    const currentLetter = s.charCodeAt(i) - a;
+    count[currentLetter] = count[currentLetter] - 1;
+
+    if (visited[currentLetter]) continue;
+
+    while(uniqueSubString.length > 0) {
+
+      const lastLetter = uniqueSubString[uniqueSubString.length-1]-a;
+
+      //if the last letter can come after the currentLetter and there is one of the last letter coming up
+      if (lastLetter > currentLetter && count[lastLetter] > 0) {
+        visited[lastLetter] = false;
+        uniqueSubString.pop();
+      } else
+        break;
+    }
+
+    visited[currentLetter] = true;
+    uniqueSubString.push(currentLetter+a);
+
+  }
+
+  return String.fromCharCode(...uniqueSubString);
 
 };
 ```
